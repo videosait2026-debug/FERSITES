@@ -1,0 +1,6 @@
+{
+  "name": "FER SITES - Odontología Integral Uyuni",
+  "description": "Sitio web oficial de FER SITES, consultorio odontológico integral de alta tecnología ubicado en el Salar de Uyuni, Bolivia.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

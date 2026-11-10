@@ -1,0 +1,1489 @@
+PROMPT DE CONSTRUCCIÓN — FASE 2
+Plantilla: ESPEJO-T003 v1.0 (dentista integral)
+Requisitos: Claude Code, Codex o Antigravity con Node.js 22 o superior. También Google AI Studio, adjuntando los recursos al prompt.
+
+ROL
+Eres un instalador de código. No diseñas ni programas: haces unas preguntas, creas un proyecto ya terminado y probado copiando cada archivo carácter por carácter, y cargas los datos del negocio solo donde se te indica.
+
+REGLAS OBLIGATORIAS
+1. Crea cada archivo con la ruta y el contenido exactos que aparecen entre sus marcas.
+2. No mejores, resumas, reformatees, renombres ni comentes nada. No cambies clases, colores, fuentes, tiempos, curvas, medidas ni lógica.
+3. Solo puedes cambiar los VALORES de src/contenido.ts, conservando su estructura, usando las respuestas del usuario.
+4. Nunca inventes datos de un negocio real: precios, cifras, direcciones, nombres, testimonios ni garantías. Lo que el usuario no dé se deja vacío y ese bloque se oculta. Solo se usan los textos de ejemplo si el usuario pide "usa el ejemplo".
+5. No agregues, quites ni actualices dependencias. No agregues Tailwind.
+6. No omitas nada: están prohibidos "...", "resto del código" y cualquier abreviación.
+7. Solo puedes intervenir en el código si un comando de los PASOS falla, y solo lo mínimo. Si lo haces, avísalo al final.
+8. Las marcas >>> ARCHIVO y <<< FIN ARCHIVO no forman parte de los archivos.
+9. No sustituyas los recursos por dibujos, SVG, ilustraciones ni imágenes inventadas.
+
+PASO 1 — REVISAR RECURSOS
+Busca los recursos en la carpeta "recursos" o entre los archivos adjuntos. Los esperados son:
+- hook.mp4 y transformacion.mp4 (secuencias con el scroll)
+- antes, despues y doctora (fotos)
+- esp-ortodoncia, esp-carillas, esp-curaciones, esp-implantes, esp-endodoncia, esp-limpieza, esp-blanqueamiento y esp-ninos, cada uno en .jpg y .mp4
+- cita-1 a cita-3 y galeria-1 a galeria-4 (fotos)
+
+Si falta alguno, muestra lo encontrado y lo que falta, y pregunta exactamente:
+"Solo encontré estos recursos. ¿Continúo únicamente con ellos?"
+Espera la respuesta. Si dice que no, detente. Si dice que sí, no preguntes más sobre recursos: cada parte sin recurso ya tiene su versión programada. No generes ni descargues recursos.
+
+PASO 2 — PREGUNTAR POR EL NEGOCIO
+En un solo mensaje numerado, pide lo siguiente y espera la respuesta. Ofrece también responder "usa el ejemplo".
+1. Nombre del consultorio y una palabra para el inicio (por ejemplo "Sonríe").
+2. Nombre de la doctora o doctor, especialidad, biografía corta y credenciales reales.
+3. WhatsApp con código de país, solo números.
+4. Dirección y horarios.
+5. Coordenadas del consultorio y de un punto de partida conocido, con su nombre (se obtienen con clic derecho en Google Maps). Si no las tiene, ubicacion.activo = false.
+6. Especialidades que ofrece. Las que no ofrezca se quitan de tratamientos y de sintomas.
+7. Testimonios reales con autor, si los tiene.
+Lo que no responda se deja vacío. Si tu entorno construye de inmediato y no permite preguntar, usa el ejemplo y avísalo al terminar.
+
+PASO 3 — CONSTRUIR
+1. Crea todos los archivos de este prompt y pon las respuestas en src/contenido.ts.
+2. Si puedes ejecutar comandos:
+   a. Ejecuta: npm install
+   b. Ejecuta: npm run recursos   (debe terminar con la línea RECURSOS LISTOS)
+   c. Ejecuta: npm run build   (debe terminar sin errores)
+   d. Ejecuta: npm run dev   (déjalo corriendo)
+3. Si no puedes ejecutar comandos (Google AI Studio):
+   a. Omite scripts/recursos.mjs y no cambies src/frames.json. La web extrae los fotogramas sola en el navegador.
+   b. Deja los recursos adjuntos dentro de public/recursos con sus nombres exactos.
+   c. Si tu entorno los guarda en otra ruta, cambia únicamente el valor de BASE_RECURSOS en src/lib.tsx.
+   d. Si tu entorno ya trae su propio index.html, punto de entrada o configuración, conserva solo lo necesario para que monte src/main.tsx.
+4. Termina diciendo solamente: dónde se ve la web, el resumen de recursos y cualquier intervención hecha por la regla 7.
+
+ARCHIVOS
+
+>>> ARCHIVO: package.json
+{
+  "name": "espejo",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "recursos": "node scripts/recursos.mjs",
+    "dev": "vite --port 5173 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --port 5173"
+  },
+  "dependencies": {
+    "@fontsource-variable/outfit": "5.3.0",
+    "@fontsource/dm-serif-display": "5.3.0",
+    "maplibre-gl": "6.17.0",
+    "motion": "14.10.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@ffmpeg-installer/ffmpeg": "1.1.0",
+    "@vitejs/plugin-react": "6.2.1",
+    "vite": "8.3.6"
+  }
+}
+<<< FIN ARCHIVO
+
+>>> ARCHIVO: vite.config.ts
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  base: './',
+  plugins: [react()],
+})
+<<< FIN ARCHIVO
+
+>>> ARCHIVO: tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": false,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "types": ["vite/client"]
+  },
+  "include": ["src"]
+}
+<<< FIN ARCHIVO
+
+>>> ARCHIVO: index.html
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Odontología integral</title>
+    <meta name="theme-color" content="#0B1416" />
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+<<< FIN ARCHIVO
+
+>>> ARCHIVO: scripts/recursos.mjs
+// Optimiza lo que exista en /recursos, lo publica en /public/recursos y extrae los fotogramas de scroll.
+import { spawnSync } from 'node:child_process'
+import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+import instalador from '@ffmpeg-installer/ffmpeg'
+
+const entrada = 'recursos'
+const salida = 'public/recursos'
+const archivos = existsSync(entrada) ? readdirSync(entrada) : []
+const frames = {}
+const correr = (args) => spawnSync(instalador.path, ['-y', '-loglevel', 'error', ...args], { encoding: 'utf8' }).status === 0
+
+rmSync(salida, { recursive: true, force: true })
+rmSync('public/frames', { recursive: true, force: true })
+mkdirSync(salida, { recursive: true })
+
+function extraer(nombre, carpeta, filtro) {
+  const destino = `public/frames/${nombre}/${carpeta}`
+  mkdirSync(destino, { recursive: true })
+  const ok = correr(['-i', join(entrada, `${nombre}.mp4`), '-vf', filtro, '-an', '-c:v', 'libwebp', '-quality', '74', join(destino, '%04d.webp')])
+  if (!ok) return 0
+  return readdirSync(destino).filter((f) => f.endsWith('.webp')).length
+}
+
+for (const nombre of ['hook', 'transformacion']) {
+  if (!archivos.includes(`${nombre}.mp4`)) continue
+  const total = extraer(nombre, 'd', 'fps=15,scale=1600:-2')
+  extraer(nombre, 'm', 'fps=15,crop=ih*0.5:ih,scale=720:-2')
+  if (total) frames[nombre] = { total, ext: 'webp' }
+}
+
+let videos = 0
+let fotos = 0
+for (const archivo of archivos) {
+  const origen = join(entrada, archivo)
+  if (/\.mp4$/i.test(archivo)) {
+    const ok = correr(['-i', origen, '-an', '-vf', 'scale=1600:-2', '-c:v', 'libx264', '-crf', '27', '-preset', 'veryfast', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', join(salida, archivo)])
+    if (!ok) copyFileSync(origen, join(salida, archivo))
+    videos += 1
+  } else if (/\.(jpe?g|png|webp)$/i.test(archivo)) {
+    const base = archivo.replace(/\.[^.]+$/, '')
+    const ok = correr(['-i', origen, '-vf', "scale='min(2000,iw)':-2", '-q:v', '4', join(salida, `${base}.jpg`)])
+    if (!ok) copyFileSync(origen, join(salida, `${base}.jpg`))
+    fotos += 1
+  }
+}
+
+writeFileSync('src/frames.json', JSON.stringify(frames, null, 2) + '\n')
+console.log(`RECURSOS LISTOS: ${videos} videos, ${fotos} fotos, secuencias: ${Object.keys(frames).join(', ') || 'ninguna'}.`)
+<<< FIN ARCHIVO
+
+>>> ARCHIVO: src/main.tsx
+import '@fontsource/dm-serif-display/400.css'
+import '@fontsource/dm-serif-display/400-italic.css'
+import '@fontsource-variable/outfit'
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import App from './App'
+import './index.css'
+
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+<<< FIN ARCHIVO
+
+>>> ARCHIVO: src/index.css
+/* COLOR. Cada token tiene un solo trabajo. */
+:root {
+  --base: #0b1416;      /* 60 %: fondo detrás de fotos y videos */
+  --marfil: #f4efe6;    /* 25 %: texto sobre oscuro y secciones claras */
+  --petroleo: #12383b;  /* 10 %: paneles */
+  --menta: #57bfae;     /* 4 %: línea, punto y acción principal. Nunca en títulos */
+  --coral: #e4573d;     /* 1 %: solo urgencia */
+
+  /* TIPOGRAFÍA. Solo estos seis niveles. */
+  --serif: 'DM Serif Display', Georgia, serif;
+  --sans: 'Outfit Variable', system-ui, sans-serif;
+  --t-h2: clamp(40px, 5.5vw, 88px);
+  --t-h3: clamp(26px, 2.6vw, 40px);
+  --t-lead: clamp(18px, 1.6vw, 24px);
+  --t-body: clamp(16px, 1.15vw, 18px);
+  --t-nota: clamp(13px, 0.95vw, 14px);
+
+  --m: clamp(20px, 4vw, 64px);
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* { box-sizing: border-box; margin: 0; }
+html { background: var(--base); overflow-x: clip; -webkit-text-size-adjust: 100%; }
+body { background: var(--base); color: var(--marfil); font: 400 var(--t-body)/1.55 var(--sans); overflow-x: clip; -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+a { color: inherit; }
+ul { padding: 0; list-style: none; }
+img, video, canvas { display: block; }
+h1, h2, h3, strong.s { font-family: var(--serif); font-weight: 400; }
+h2 { font-size: var(--t-h2); line-height: 1.02; letter-spacing: -0.01em; }
+h3 { font-size: var(--t-h3); line-height: 1.1; }
+.lead { font-size: var(--t-lead); font-weight: 300; line-height: 1.4; }
+.nota { font-size: var(--t-nota); font-weight: 500; opacity: 0.72; }
+:focus-visible { outline: 2px solid var(--menta); outline-offset: 3px; }
+
+.lleno { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cubre { object-fit: cover; object-position: center; }
+.negro { background: var(--base); }
+.vacio { background: var(--petroleo); }
+.fijo { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; }
+
+.franja { display: inline-block; background: var(--menta); color: var(--base); font-weight: 500; font-size: var(--t-lead); line-height: 1.2; padding: 0.22em 0.55em; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 14px 30px; border-radius: 99px; font-weight: 500; font-size: 17px; text-decoration: none; transition: transform 0.35s var(--ease), background 0.25s; }
+.btn:hover { transform: translateY(-3px); }
+.menta { background: var(--menta); color: var(--base); }
+.coral { background: var(--coral); color: var(--base); font-weight: 600; }
+.claro { background: var(--marfil); color: var(--base); }
+.oscuro { background: var(--base); color: var(--marfil); }
+.enlace { text-decoration: underline; text-underline-offset: 4px; min-height: 44px; }
+
+.punto { position: absolute; left: 50%; top: 44%; width: 2px; margin-left: -1px; background: var(--menta); transform: translateY(-100%); z-index: 3; }
+.punto i { position: absolute; left: -8px; bottom: -9px; width: 18px; height: 18px; border-radius: 50%; background: var(--menta); }
+
+/* CABECERA */
+.cab { position: fixed; z-index: 30; inset: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: 14px var(--m); transition: color 0.3s; }
+.cab.claro { color: var(--base); }
+.marca { font-family: var(--serif); font-size: 24px; text-decoration: none; min-height: 44px; display: flex; align-items: center; }
+.cab nav { display: none; gap: 30px; }
+.cab nav button { min-height: 44px; }
+.cab nav button:hover { text-decoration: underline; text-underline-offset: 5px; }
+.cab-m { min-height: 44px; min-width: 60px; text-align: right; }
+.menu { position: fixed; z-index: 25; inset: 0; background: var(--petroleo); display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 80px var(--m); }
+.menu button { font-family: var(--serif); font-size: clamp(36px, 10vw, 64px); line-height: 1.2; text-align: left; min-height: 56px; }
+
+/* CARGA */
+.carga { position: fixed; z-index: 60; inset: 0; background: var(--base); display: grid; place-content: center; justify-items: center; gap: 20px; }
+.carga svg { width: 120px; height: 120px; }
+
+/* HOOK */
+.hook { height: 640vh; position: relative; }
+.hook-velo { background: linear-gradient(180deg, rgba(11,20,22,.55), rgba(11,20,22,.12) 34%, rgba(11,20,22,.2) 62%, rgba(11,20,22,.82)); }
+.palabra { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-58%); text-align: center; line-height: 1; letter-spacing: -0.02em; white-space: nowrap; }
+.pal-a { display: block; clip-path: inset(-20% -5% 50% -5%); }
+.pal-b { position: absolute; inset: 0; display: block; clip-path: inset(50% -5% -20% -5%); }
+.hook-arr { position: absolute; left: 0; right: 0; top: clamp(76px, 19vh, 170px); text-align: center; font-size: var(--t-lead); letter-spacing: 0.14em; padding: 0 var(--m); }
+.hook-pie { position: absolute; left: var(--m); right: var(--m); bottom: 72px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+.hook-pie p { max-width: 36em; }
+.capi { position: absolute; left: var(--m); right: var(--m); bottom: 92px; }
+.capi p { font-size: var(--t-lead); font-weight: 300; margin-top: 10px; }
+.hook-fin { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--serif); font-size: var(--t-h2); }
+
+/* SÍNTOMAS */
+.sint { height: 720vh; position: relative; background: var(--base); }
+.sint-foto { position: absolute; inset: 0; clip-path: circle(0% at 50% 44%); transition: clip-path 1s var(--ease); }
+.sint-foto[data-e='pre'] { clip-path: circle(120% at 50% 44%); transition: none; z-index: 1; }
+.sint-foto[data-e='on'] { clip-path: circle(120% at 50% 44%); z-index: 2; }
+.sint-velo { z-index: 3; background: linear-gradient(180deg, rgba(11,20,22,.72), rgba(11,20,22,.1) 30%, rgba(11,20,22,.5) 58%, rgba(11,20,22,.95)); }
+.sint .punto { z-index: 4; }
+.sint-cab { position: absolute; z-index: 4; left: var(--m); right: var(--m); top: 76px; }
+.sint-lista { position: absolute; z-index: 4; left: var(--m); right: var(--m); bottom: 112px; }
+.sint-lista button { display: none; font: 400 var(--t-h3)/1.15 var(--serif); opacity: 0.55; min-height: 44px; transition: opacity 0.3s; text-align: left; }
+.sint-lista button.on { display: block; opacity: 1; }
+.sint-res { position: absolute; z-index: 4; left: var(--m); right: var(--m); bottom: 62px; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px; }
+.sint-res .franja { font-size: var(--t-body); }
+.sint-res p { flex-basis: 100%; order: 3; display: none; }
+
+/* CARRIL */
+.carril { height: 620vh; position: relative; background: var(--marfil); color: var(--base); }
+.carril .fijo { background: var(--marfil); }
+.pista { display: flex; align-items: stretch; gap: clamp(16px, 2.4vw, 40px); height: 100%; width: max-content; padding: 84px var(--m) 74px; }
+.carr-cab { width: min(84vw, 620px); display: flex; flex-direction: column; justify-content: flex-end; gap: 18px; padding-bottom: 12px; }
+.carr-cab p { font-size: var(--t-lead); font-weight: 300; max-width: 24em; }
+.pieza { display: flex; flex-direction: column; text-align: left; flex: none; color: var(--base); }
+.pieza.g { width: min(80vw, 760px); }
+.pieza.m { width: min(72vw, 520px); }
+.pieza.p { width: min(64vw, 400px); }
+.pieza.alta { padding-bottom: clamp(30px, 9vh, 110px); }
+.pieza.baja { padding-top: clamp(30px, 9vh, 110px); }
+.pieza-m { position: relative; flex: 1; min-height: 0; overflow: hidden; background: var(--petroleo); display: block; }
+.pieza-m video, .pieza-m img { transition: transform 1.1s var(--ease); }
+.pieza:hover .pieza-m video, .pieza:hover .pieza-m img { transform: scale(1.05); }
+.pieza strong { font-family: var(--serif); font-weight: 400; font-size: var(--t-h3); line-height: 1.1; margin-top: 12px; }
+.pieza-f { font-size: var(--t-body); }
+
+/* TRANSFORMACIÓN */
+.trans { height: 460vh; position: relative; background: var(--base); }
+.trans-velo { background: linear-gradient(180deg, rgba(11,20,22,.3), transparent 40%, rgba(11,20,22,.75)); }
+.aro { position: absolute; left: 50%; top: 50%; width: 44vmin; height: 44vmin; margin: -22vmin 0 0 -22vmin; border-radius: 50%; border: clamp(6px, 1vmin, 12px) solid #c9d2d2; box-shadow: 0 0 0 2px #5f6c6c; }
+.trans-t { position: absolute; left: var(--m); right: var(--m); bottom: 92px; }
+.trans-t p { font-size: var(--t-lead); font-weight: 300; margin-top: 8px; }
+
+/* COMPARADOR */
+.comp { background: var(--marfil); color: var(--base); padding-top: clamp(84px, 12vw, 170px); }
+.comp-cab { display: grid; gap: 18px; padding: 0 var(--m) clamp(30px, 4vw, 60px); }
+.comp-caja { --x: 50%; position: relative; height: 92vh; height: 92svh; overflow: hidden; background: var(--base); }
+.comp-a { position: absolute; inset: 0; clip-path: inset(0 calc(100% - var(--x)) 0 0); }
+.comp-l { position: absolute; top: 0; bottom: 0; left: var(--x); width: 2px; margin-left: -1px; background: var(--menta); }
+.comp-l b { position: absolute; left: -10px; top: 50%; width: 22px; height: 22px; margin-top: -11px; border-radius: 50%; background: var(--menta); }
+.comp-e { position: absolute; bottom: 22px; background: var(--menta); color: var(--base); font-weight: 500; padding: 3px 12px; }
+.comp-e.i { left: var(--m); }
+.comp-e.d { right: var(--m); }
+.comp-caja input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: ew-resize; touch-action: pan-y; }
+
+/* TU PRIMERA CITA */
+.cita { background: var(--marfil); color: var(--base); padding: clamp(100px, 14vw, 210px) var(--m) clamp(60px, 8vw, 120px); }
+.cita-t { max-width: 11em; margin-bottom: clamp(44px, 6vw, 90px); }
+.cita-fija { display: none; }
+.cita article { padding-bottom: 72px; }
+.cita-m { position: relative; aspect-ratio: 4/3; overflow: hidden; background: var(--petroleo); margin-bottom: 20px; }
+.cita article h3 { margin-bottom: 8px; }
+
+/* DOCTORA */
+.doc { background: var(--petroleo); display: grid; }
+.doc-m { position: relative; height: 112vw; max-height: 92vh; overflow: hidden; background: var(--base); }
+.doc-in { position: absolute; inset: -9% 0; }
+.doc-t { padding: clamp(44px, 7vw, 110px) var(--m) clamp(72px, 9vw, 130px); display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 20px; }
+.doc-t .franja { font-size: var(--t-body); }
+.doc-t li { padding: 12px 0; border-top: 1px solid rgba(244,239,230,.25); }
+.doc-t ul { width: 100%; }
+
+/* GALERÍA */
+.gal { padding: clamp(90px, 13vw, 200px) var(--m); }
+.gal-t { max-width: 10em; margin-bottom: clamp(36px, 5vw, 72px); }
+.gal-g { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+.gal-c { position: relative; overflow: hidden; background: var(--petroleo); }
+.c0 { grid-column: span 6; aspect-ratio: 16/9; }
+.c1, .c2 { grid-column: span 3; aspect-ratio: 4/5; }
+.c3 { grid-column: span 6; aspect-ratio: 21/9; }
+.test { padding: clamp(70px, 9vw, 130px) var(--m); display: grid; gap: 44px; background: var(--petroleo); }
+.test blockquote { font: 400 var(--t-h3)/1.2 var(--serif); }
+.test figcaption { margin-top: 12px; }
+
+/* MAPA */
+.mapa { height: 340vh; position: relative; background: var(--base); }
+.mapa-v { pointer-events: none; background: linear-gradient(180deg, rgba(11,20,22,.95) 0, transparent 44%, transparent 72%, rgba(11,20,22,.85)); }
+.mapa-t { position: absolute; left: var(--m); right: var(--m); top: 82px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.mapa-t h2 { margin-bottom: 10px; font-size: clamp(32px, 5.5vw, 88px); }
+.mapa-t .btn { margin-top: 12px; }
+.map-chip { background: var(--base); color: var(--marfil); padding: 3px 12px; border-radius: 99px; font: 500 14px var(--sans); }
+.map-chip.fin { background: var(--menta); color: var(--base); }
+
+/* AGENDA */
+.age { position: relative; overflow: hidden; }
+.age-f { opacity: 0.5; }
+.age-v { background: linear-gradient(90deg, rgba(11,20,22,.92), rgba(11,20,22,.55)); }
+.age-in { position: relative; min-height: 100vh; min-height: 100svh; padding: clamp(100px, 12vw, 170px) var(--m); display: grid; gap: 44px; align-content: center; }
+.age-in h2 { margin-bottom: 26px; max-width: 11em; }
+.age-f2 { display: grid; gap: 22px; justify-items: start; }
+fieldset { border: 0; padding: 0; }
+legend { font-weight: 500; margin-bottom: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button { min-height: 44px; padding: 0 16px; border: 1px solid rgba(244,239,230,.55); border-radius: 99px; font-size: 15px; transition: background 0.2s, color 0.2s; }
+.chips button.on { background: var(--marfil); color: var(--base); border-color: var(--marfil); }
+
+/* PREGUNTAS */
+.dud { background: var(--marfil); color: var(--base); padding: clamp(80px, 10vw, 150px) var(--m); display: grid; gap: 34px; }
+.acor { border-top: 1px solid rgba(11,20,22,.25); }
+.acor button { display: flex; justify-content: space-between; align-items: center; gap: 22px; width: 100%; min-height: 64px; text-align: left; font-size: var(--t-lead); padding: 12px 0; }
+.acor b { font-weight: 300; font-size: 30px; line-height: 1; }
+.acor p { padding-bottom: 22px; max-width: 40em; }
+
+/* PIE */
+.pie { background: var(--base); padding: clamp(90px, 12vw, 180px) var(--m) 86px; }
+.pie-g { font: 400 var(--t-h2)/1.02 var(--serif); max-width: 10em; margin-bottom: 26px; }
+.pie-d { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; margin: 66px 0 28px; padding-top: 26px; border-top: 1px solid rgba(244,239,230,.2); }
+.pie-d a { display: flex; align-items: center; min-height: 44px; text-decoration: none; }
+.pie-d a:hover { text-decoration: underline; }
+
+/* TRATAMIENTO */
+.tr-h { position: relative; height: 100vh; height: 100svh; overflow: hidden; background: var(--petroleo); }
+.tr-v { background: linear-gradient(180deg, rgba(11,20,22,.45), transparent 36%, rgba(11,20,22,.9)); }
+.tr-h .punto { top: 40%; }
+.tr-ht { position: absolute; left: var(--m); right: var(--m); bottom: clamp(70px, 8vh, 90px); display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.tr-ht h1 { font-size: clamp(64px, 11vw, 176px); line-height: 0.98; letter-spacing: -0.015em; }
+.tr-a { background: var(--marfil); color: var(--base); padding: clamp(84px, 11vw, 170px) var(--m); display: grid; gap: 40px; align-items: center; }
+.tr-a > div:first-child { display: flex; flex-direction: column; align-items: flex-start; gap: 22px; }
+.tr-img { position: relative; aspect-ratio: 4/5; overflow: hidden; background: var(--petroleo); }
+.tr-b { background: var(--petroleo); padding: clamp(70px, 9vw, 130px) var(--m); display: grid; gap: 30px; }
+.tr-b li { font: 400 var(--t-h3)/1.15 var(--serif); padding: 14px 0; border-top: 1px solid rgba(244,239,230,.25); }
+.tr-c { background: var(--marfil); color: var(--base); padding: clamp(84px, 11vw, 170px) var(--m) 30px; display: grid; gap: 34px; }
+.tr-p { display: grid; gap: 26px; }
+.tr-p h3 { margin-bottom: 6px; }
+.tr-s { position: relative; display: block; width: 100%; height: 72vh; overflow: hidden; background: var(--petroleo); text-align: left; }
+.tr-st { position: absolute; left: var(--m); bottom: 44px; display: flex; flex-direction: column; }
+.tr-st strong { font: 400 var(--t-h2)/1 var(--serif); }
+
+/* INTERFAZ */
+.barra { position: fixed; z-index: 20; inset: auto 0 0; min-height: 54px; display: flex; align-items: center; justify-content: center; background: var(--menta); color: var(--base); font-weight: 500; text-decoration: none; padding-bottom: env(safe-area-inset-bottom); }
+.iris { position: fixed; z-index: 55; width: 40px; height: 40px; margin: -20px 0 0 -20px; border-radius: 50%; background: var(--petroleo); box-shadow: 0 0 0 1px #c9d2d2; transform: scale(0); pointer-events: none; transition: transform 0.55s cubic-bezier(.7,0,.3,1), opacity .25s; }
+.iris.on { transform: scale(110); }
+.iris:not(.on) { opacity: 0; transition: opacity .3s; }
+.lente { position: fixed; left: 0; top: 0; z-index: 70; opacity: 0; pointer-events: none; }
+.lente i { position: absolute; left: -16px; top: -16px; width: 32px; height: 32px; border-radius: 50%; border: 2px solid #fff; mix-blend-mode: difference; transition: transform .3s var(--ease); }
+.lente[data-g='1'] i { transform: scale(1.5); }
+.lente[data-v='1'] i { transform: scale(2.8); background: var(--menta); border-color: var(--menta); mix-blend-mode: normal; }
+.lente span { position: absolute; transform: translate(-50%,-50%); color: var(--base); font-weight: 600; font-size: 15px; opacity: 0; }
+.lente[data-v='1'] span { opacity: 1; }
+
+.barrer { will-change: clip-path; }
+
+@media (min-width: 768px) {
+  .cab nav { display: flex; }
+  .cab-m, .barra { display: none; }
+  .pie { padding-bottom: 50px; }
+  .hook-pie { bottom: 42px; }
+  .capi { bottom: auto; top: 34vh; width: 34vw; }
+  .capi.izq { right: auto; }
+  .capi.der { left: auto; text-align: right; }
+  .sint-cab { top: 96px; max-width: 12em; }
+  .sint-lista { flex-direction: column; left: auto; right: var(--m); bottom: 64px; width: 30vw; gap: 0; align-items: flex-end; }
+  .sint-lista button { display: block; text-align: right; }
+  .sint-res { right: auto; bottom: 54px; flex-direction: column; align-items: flex-start; max-width: 34vw; gap: 10px; }
+  .sint-res .franja { font-size: var(--t-lead); }
+  .sint-res p { display: block; order: 0; font-size: var(--t-lead); font-weight: 300; }
+  .trans-t.der { left: auto; text-align: right; }
+  .comp-cab { grid-template-columns: 1.2fr 1fr; align-items: end; }
+  .cita-g { display: grid; grid-template-columns: 1.1fr 1fr; gap: 7vw; }
+  .cita-fija { display: block; position: sticky; top: 12vh; height: 76vh; overflow: hidden; background: var(--petroleo); }
+  .cita-f { position: absolute; inset: 0; clip-path: inset(100% 0 0 0); transition: clip-path 1s var(--ease); }
+  .cita-f[data-on='true'] { clip-path: inset(0); }
+  .cita-m { display: none; }
+  .cita article { min-height: 70vh; display: flex; flex-direction: column; justify-content: center; padding: 0; }
+  .doc { grid-template-columns: 1.15fr 1fr; }
+  .doc-m { height: auto; max-height: none; min-height: 100vh; }
+  .gal-c.c0 { grid-column: 1 / span 4; aspect-ratio: auto; grid-row: span 2; }
+  .gal-c.c1 { grid-column: 5 / span 2; aspect-ratio: 1; }
+  .gal-c.c2 { grid-column: 5 / span 2; aspect-ratio: 1; }
+  .c3 { grid-column: 2 / span 4; }
+  .test { grid-template-columns: 1fr 1fr; }
+  .mapa-t { right: auto; width: 34vw; top: 96px; }
+  .mapa-v { background: linear-gradient(90deg, rgba(11,20,22,.96) 0, rgba(11,20,22,.7) 36%, transparent 58%); }
+  .age-in { grid-template-columns: 1.15fr 1fr; align-items: center; }
+  .dud { grid-template-columns: 1fr 1.25fr; gap: 6vw; align-items: start; }
+  .pie-d { grid-template-columns: 1.4fr 1.2fr 1fr 1fr; }
+  .tr-a { grid-template-columns: 1fr 1fr; gap: 7vw; }
+  .tr-b { grid-template-columns: 1fr 1.4fr; }
+  .tr-p { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (max-height: 500px) {
+  .sint, .carril, .mapa { height: auto; }
+  .sint .fijo { position: relative; height: 100vh; }
+  .sint-lista { display: flex; flex-flow: row wrap; left: var(--m); right: var(--m); width: auto; bottom: 8px; gap: 0 18px; align-items: center; justify-content: flex-start; }
+  .sint-lista button { display: block; font: 400 15px/1.2 var(--sans); min-height: 44px; text-align: left; }
+  .sint-cab h2 { font-size: 30px; }
+  .sint-cab { top: 64px; }
+  .sint-res { display: none; }
+  .carril .fijo { position: relative; height: 100vh; overflow-x: auto; }
+  .pista { padding: 66px var(--m) 20px; }
+  .carr-cab h2 { font-size: 30px; }
+  .carr-cab p { font-size: 15px; }
+  .mapa .fijo { position: relative; height: 130vh; }
+  .capi h2, .trans-t h2 { font-size: 32px; }
+  .capi { top: 24vh; }
+  .capi p, .trans-t p { font-size: 15px; }
+  .trans-t { bottom: 16px; }
+  .hook-arr { top: 62px; font-size: 14px; }
+  .hook-pie p, .hook-pie .franja { display: none; }
+  .hook-pie { bottom: 12px; }
+  .doc-m { min-height: 90vh; }
+  .age-in { padding: 80px var(--m) 40px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .hook, .trans, .sint, .carril, .mapa { height: auto; }
+  .fijo { position: relative; }
+  .carril .fijo { overflow-x: auto; }
+  * { transition: none !important; }
+}
+<<< FIN ARCHIVO
+
+>>> ARCHIVO: src/frames.json
+{}
+<<< FIN ARCHIVO
+
+>>> ARCHIVO: src/contenido.ts
+// Datos del negocio. Es el único archivo que cambia entre un cliente y otro.
+export const marca = {
+  nombre: 'Montes Dental',
+  palabra: 'Sonríe',
+  pregunta: '¿Cuándo fue tu última revisión?',
+  franja: 'Odontología integral para toda la familia',
+  frase: 'Ortodoncia, carillas, curaciones, implantes y todo lo que tu boca necesite, con una sola doctora al frente.',
+  doctora: 'Dra. Valeria Montes',
+  especialidad: 'Odontología integral y estética',
+  whatsapp: '59170000000',
+  direccion: 'Avenida Ejemplo 123, tu ciudad',
+  horario: ['Lunes a viernes, 9:00 a 19:00', 'Sábado, 9:00 a 13:00'],
+  aviso: 'Clínica ficticia de demostración. Reemplaza estos datos por los reales.',
+}
+
+export const ubicacion = {
+  activo: true,
+  origen: { nombre: 'Plaza principal', lat: -16.4958, lng: -68.1334 },
+  destino: { nombre: 'El consultorio', lat: -16.5108, lng: -68.1263 },
+}
+
+export const capitulos = [
+  { desde: 0.2, hasta: 0.38, lado: 'izq', titulo: 'Por fuera, todo parece bien.', texto: 'Y ese suele ser el problema.' },
+  { desde: 0.44, hasta: 0.62, lado: 'der', titulo: 'El espejo ve lo que tú no.', texto: 'Una revisión encuentra lo que todavía no duele.' },
+  { desde: 0.68, hasta: 0.84, lado: 'izq', titulo: 'Cada boca pide algo distinto.', texto: 'Por eso aquí se resuelve todo en un mismo lugar.' },
+]
+
+export const sintomas = [
+  { frase: 'Tengo los dientes torcidos', trat: 'ortodoncia' },
+  { frase: 'No me gusta su forma', trat: 'carillas' },
+  { frase: 'Tengo una caries', trat: 'curaciones' },
+  { frase: 'Me falta una pieza', trat: 'implantes' },
+  { frase: 'Me duele y no se pasa', trat: 'endodoncia' },
+  { frase: 'Me sangran las encías', trat: 'limpieza' },
+  { frase: 'Los quiero más claros', trat: 'blanqueamiento' },
+  { frase: 'Es para mi hijo', trat: 'ninos' },
+]
+
+export const tratamientos = [
+  { slug: 'ortodoncia', nombre: 'Ortodoncia', frase: 'Los dientes se mueven. Solo necesitan dirección.', resuelve: 'Corrige dientes apiñados, separados o una mordida que no cierra bien, con brackets o alineadores transparentes.', indicado: ['Dientes torcidos o encimados', 'Espacios entre dientes', 'Mordida cruzada o abierta', 'Desgaste por mala mordida'], proceso: [['Estudio', 'Fotos, radiografías y medidas para planificar cada movimiento.'], ['Plan', 'Eliges entre brackets y alineadores, con tiempos claros.'], ['Controles', 'Citas periódicas para ajustar y revisar el avance.'], ['Retención', 'Un retenedor mantiene el resultado.']], preguntas: [['¿Soy muy grande para usar ortodoncia?', 'No hay edad límite si los dientes y las encías están sanos.'], ['¿Se notan los alineadores?', 'Son transparentes y casi no se ven a la distancia normal de una conversación.']] },
+  { slug: 'carillas', nombre: 'Carillas', frase: 'La forma que tus dientes no tuvieron.', resuelve: 'Láminas delgadas de porcelana o resina que cambian la forma, el tamaño y el tono de los dientes visibles.', indicado: ['Dientes cortos o desparejos', 'Manchas que no aclaran', 'Bordes astillados', 'Pequeños espacios'], proceso: [['Diseño', 'Vemos cómo quedaría tu sonrisa antes de tocar un diente.'], ['Preparación', 'Se prepara el esmalte solo lo necesario.'], ['Prueba', 'Revisas forma y color antes de la colocación final.'], ['Cementado', 'Se fijan y se ajusta la mordida.']], preguntas: [['¿Se ven artificiales?', 'Depende del diseño. Por eso se prueban antes de colocarlas.'], ['¿Cuánto duran?', 'Varía según el material y tus cuidados. Te lo explicamos en la evaluación.']] },
+  { slug: 'curaciones', nombre: 'Curaciones', frase: 'La caries se va. El diente se queda.', resuelve: 'Se retira el tejido dañado y se reconstruye el diente con resina del mismo tono.', indicado: ['Caries pequeñas o medianas', 'Curaciones antiguas filtradas', 'Sensibilidad al frío o al dulce', 'Dientes fracturados'], proceso: [['Diagnóstico', 'Se ubica la lesión y su profundidad.'], ['Limpieza', 'Se retira solo lo que está dañado.'], ['Reconstrucción', 'La resina se coloca por capas.'], ['Pulido', 'Se ajusta la mordida y queda liso.']], preguntas: [['¿Me va a doler?', 'Usamos anestesia cuando hace falta y te avisamos cada paso.'], ['¿Se puede cambiar una curación negra?', 'Sí, si el diente lo permite se reemplaza por resina del color del diente.']] },
+  { slug: 'implantes', nombre: 'Implantes', frase: 'Donde había un hueco, vuelve a haber un diente.', resuelve: 'Un pilar de titanio reemplaza la raíz y sostiene una corona a medida, sin desgastar los dientes vecinos.', indicado: ['Una o varias piezas perdidas', 'Prótesis que se mueven', 'Hueso suficiente o regenerable', 'Encías sanas'], proceso: [['Evaluación', 'Tomografía para medir el hueso disponible.'], ['Colocación', 'Cirugía con anestesia local.'], ['Integración', 'El hueso se une al implante durante algunos meses.'], ['Corona', 'Se coloca la pieza definitiva.']], preguntas: [['¿Cualquiera puede ponerse un implante?', 'Depende del hueso y de tu salud general. Primero se evalúa.'], ['¿Duele la cirugía?', 'Se hace con anestesia y te indicamos cómo manejar las molestias posteriores.']] },
+  { slug: 'endodoncia', nombre: 'Endodoncia', frase: 'Para cuando ya llegó al nervio.', resuelve: 'Se limpia el interior del diente y se sellan sus conductos para eliminar el dolor y conservarlo.', indicado: ['Dolor intenso o espontáneo', 'Sensibilidad que no se va', 'Infección o absceso', 'Diente oscurecido'], proceso: [['Radiografía', 'Se evalúan los conductos y la infección.'], ['Anestesia', 'La zona queda dormida.'], ['Limpieza', 'Se desinfecta el interior del diente.'], ['Sellado', 'Se cierran los conductos y se restaura.']], preguntas: [['¿Es mejor sacar el diente?', 'Conservar tu propio diente suele ser la primera opción cuando es posible.'], ['¿Cuántas citas son?', 'Depende del caso. Te lo confirmamos después de evaluarte.']] },
+  { slug: 'limpieza', nombre: 'Limpieza y encías', frase: 'Lo que el cepillo ya no alcanza.', resuelve: 'Retira el sarro y trata la inflamación de las encías para frenar el sangrado y proteger el hueso.', indicado: ['Encías que sangran', 'Mal aliento persistente', 'Sarro visible', 'Más de seis meses sin limpieza'], proceso: [['Revisión', 'Se mide la salud de las encías.'], ['Retiro de sarro', 'Con ultrasonido, también bajo la encía si hace falta.'], ['Pulido', 'Una superficie lisa acumula menos placa.'], ['Plan', 'Te indicamos la frecuencia para tu caso.']], preguntas: [['¿La limpieza daña el esmalte?', 'No, cuando la realiza un profesional con la técnica adecuada.'], ['¿Cada cuánto debo hacerla?', 'Lo habitual es cada seis meses, pero depende de tus encías.']] },
+  { slug: 'blanqueamiento', nombre: 'Blanqueamiento', frase: 'Solo después de que todo esté sano.', resuelve: 'Aclara el tono natural del esmalte con productos supervisados por la doctora.', indicado: ['Dientes amarillentos', 'Manchas por café o tabaco', 'Dientes y encías sanos', 'Antes de un evento'], proceso: [['Revisión', 'Se tratan antes caries o encías inflamadas.'], ['Tono inicial', 'Se registra para comparar.'], ['Aplicación', 'En consultorio o con férulas en casa.'], ['Cuidados', 'Te indicamos qué evitar los primeros días.']], preguntas: [['¿Aclara las carillas o resinas?', 'No. El producto actúa sobre el esmalte natural.'], ['¿Da sensibilidad?', 'Puede dar una sensibilidad temporal, y hay formas de reducirla.']] },
+  { slug: 'ninos', nombre: 'Niños', frase: 'Que su primer dentista no le dé miedo.', resuelve: 'Controles, flúor, sellantes y curaciones para dientes de leche, con el tiempo que un niño necesita.', indicado: ['Primera visita al dentista', 'Manchas en dientes de leche', 'Sellado preventivo', 'Golpes en los dientes'], proceso: [['Conocerse', 'La primera cita es para que entre en confianza.'], ['Revisión', 'Se mira cada diente con calma.'], ['Prevención', 'Flúor y sellantes cuando corresponde.'], ['Hábitos', 'Consejos para casa, con los padres presentes.']], preguntas: [['¿A qué edad es la primera visita?', 'Se recomienda con los primeros dientes, alrededor del primer año.'], ['¿Vale la pena curar dientes de leche?', 'Sí. Guardan el espacio de los definitivos y evitan dolor e infecciones.']] },
+]
+
+export const cita = [
+  { titulo: 'Te escuchamos', texto: 'Antes de sentarte en el sillón, nos cuentas qué te molesta, qué te da miedo y qué quisieras cambiar.' },
+  { titulo: 'Miramos juntos', texto: 'Revisión completa con espejo y cámara. Ves en pantalla lo mismo que ve la doctora.' },
+  { titulo: 'Tú decides', texto: 'Recibes las opciones, los tiempos y el costo por escrito. No se empieza nada sin tu visto bueno.' },
+]
+
+export const doctora = {
+  bio: 'Atiende cada caso como si fuera a mirarlo de nuevo en diez años. Primero te muestra lo que encontró, después te explica las opciones y recién entonces decides.',
+  credenciales: ['Agrega aquí tu especialidad real', 'Agrega aquí tus años de experiencia', 'Agrega aquí tu asociación o premio'],
+}
+
+// Bloque opcional: se oculta si queda vacío. Nunca inventes testimonios.
+export const testimonios: { texto: string; autor: string }[] = []
+
+export const agenda = {
+  dias: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+  horas: ['Mañana', 'Mediodía', 'Tarde'],
+}
+
+export const preguntas = [
+  ['Le tengo miedo al dentista. ¿Qué hago?', 'Dilo en tu primer mensaje. La primera cita puede ser solo para conversar y mirar, sin tratamiento.'],
+  ['¿Cuánto cuesta la primera consulta?', 'Escríbenos y te lo confirmamos antes de agendar. Cada tratamiento se presupuesta después de evaluarte.'],
+  ['¿Atienden urgencias?', 'Sí. Si te duele ahora, usa el botón de urgencia y te respondemos lo antes posible.'],
+  ['¿Puedo traer a toda mi familia?', 'Sí. Atendemos desde la primera visita de los niños hasta los tratamientos de adultos.'],
+]
+<<< FIN ARCHIVO
+
+>>> ARCHIVO: src/lib.tsx
+import { motion, useReducedMotion, type MotionValue } from 'motion/react'
+import { useEffect, useRef, useState } from 'react'
+import { marca } from './contenido'
+import frames from './frames.json'
+
+export const EASE = [0.16, 1, 0.3, 1] as const
+export const BASE_RECURSOS = 'recursos/'
+export const ruta = (archivo: string) => BASE_RECURSOS + archivo
+export const wa = (t: string) => `https://wa.me/${marca.whatsapp}?text=${encodeURIComponent(t)}`
+
+export function Foto({ n, alt = '', className = '' }: { n: string; alt?: string; className?: string }) {
+  const [mal, setMal] = useState(false)
+  if (mal) return <div className={`vacio ${className}`} />
+  return <img src={ruta(`${n}.jpg`)} alt={alt} loading="lazy" onError={() => setMal(true)} className={className} />
+}
+
+export function Video({ n, className = '' }: { n: string; className?: string }) {
+  const [mal, setMal] = useState(false)
+  const ref = useRef<HTMLVideoElement>(null)
+  useEffect(() => {
+    const v = ref.current
+    if (!v) return
+    const ob = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) v.play().catch(() => {})
+      else v.pause()
+    })
+    ob.observe(v)
+    return () => ob.disconnect()
+  }, [mal])
+  if (mal) return <Foto n={n} className={className} />
+  return <video ref={ref} src={ruta(`${n}.mp4`)} muted loop playsInline preload="metadata" onError={() => setMal(true)} className={className} />
+}
+
+export function useExisten(nombres: string[]) {
+  const [ok, setOk] = useState<string[]>([])
+  useEffect(() => {
+    let vivo = true
+    Promise.all(nombres.map((n) => new Promise<string | null>((res) => {
+      const i = new Image()
+      i.onload = () => res(n)
+      i.onerror = () => res(null)
+      i.src = ruta(`${n}.jpg`)
+    }))).then((l) => { if (vivo) setOk(l.filter(Boolean) as string[]) })
+    return () => { vivo = false }
+  }, [])
+  return ok
+}
+
+// Título que aparece detrás de una línea menta, como un barrido de espejo.
+export function Titulo({ texto, className = '', as = 'h2' }: { texto: string; className?: string; as?: 'h1' | 'h2' }) {
+  const reducido = useReducedMotion()
+  const T: any = motion[as]
+  return (
+    <T
+      className={`barrer ${className}`}
+      initial={reducido ? false : { clipPath: 'inset(-10% 100% -20% 0)' }}
+      whileInView={{ clipPath: 'inset(-10% -2% -20% 0)' }}
+      viewport={{ once: true, margin: '-8% 0px' }}
+      transition={{ duration: 1.15, ease: EASE }}
+    >
+      {texto}
+    </T>
+  )
+}
+
+export function Punto({ alto = 'var(--linea, 24vh)' }: { alto?: string }) {
+  return <span className="punto" style={{ height: alto }} aria-hidden="true"><i /></span>
+}
+
+type Cache = { fotos: HTMLImageElement[]; carpeta: string; lista: boolean; promesa?: Promise<void> }
+const memoria: Record<string, Cache> = {}
+
+async function extraerEnNavegador(nombre: string, c: Cache, cuadros: number, avisar: (a: number) => void) {
+  const v = document.createElement('video')
+  v.muted = true
+  v.playsInline = true
+  v.preload = 'auto'
+  v.src = ruta(`${nombre}.mp4`)
+  await new Promise<void>((ok, mal) => {
+    v.onloadeddata = () => ok()
+    v.onerror = () => mal(new Error('video'))
+    setTimeout(() => mal(new Error('tiempo')), 12000)
+  })
+  const vertical = innerHeight > innerWidth
+  const W = vertical ? 540 : 1280
+  const H = vertical ? 960 : 720
+  const cv = document.createElement('canvas')
+  cv.width = W
+  cv.height = H
+  const x = cv.getContext('2d')!
+  const fin = Math.max(0.1, v.duration - 0.05)
+  for (let i = 0; i < cuadros; i++) {
+    await new Promise<void>((ok) => {
+      const t = setTimeout(ok, 1500)
+      v.onseeked = () => { clearTimeout(t); ok() }
+      v.currentTime = (i / (cuadros - 1)) * fin
+    })
+    const s = Math.max(W / v.videoWidth, H / v.videoHeight)
+    x.drawImage(v, (W - v.videoWidth * s) / 2, (H - v.videoHeight * s) / 2, v.videoWidth * s, v.videoHeight * s)
+    const blob = await new Promise<Blob | null>((ok) => cv.toBlob(ok, 'image/webp', 0.72))
+    if (blob) {
+      const img = new Image()
+      img.src = URL.createObjectURL(blob)
+      c.fotos.push(img)
+    }
+    avisar((i + 1) / cuadros)
+  }
+}
+
+export function cargarSecuencia(nombre: string, avisar: (a: number) => void = () => {}) {
+  const carpeta = innerHeight > innerWidth ? 'm' : 'd'
+  const previo = memoria[nombre]
+  if (previo?.promesa) {
+    if (previo.lista) avisar(1)
+    return previo.promesa
+  }
+  const c: Cache = { fotos: [], carpeta, lista: false }
+  memoria[nombre] = c
+  const dato = (frames as Record<string, { total: number; ext: string }>)[nombre]
+  c.promesa = (async () => {
+    try {
+      if (dato) {
+        await new Promise<void>((listo) => {
+          let listas = 0
+          c.fotos = Array.from({ length: dato.total }, (_, i) => {
+            const img = new Image()
+            img.decoding = 'async'
+            const fin = () => {
+              listas += 1
+              avisar(listas / dato.total)
+              if (listas === dato.total) listo()
+            }
+            img.onload = fin
+            img.onerror = fin
+            img.src = `frames/${nombre}/${carpeta}/${String(i + 1).padStart(4, '0')}.${dato.ext}`
+            return img
+          })
+        })
+      } else {
+        await extraerEnNavegador(nombre, c, 72, avisar)
+      }
+    } catch {
+      avisar(1)
+    }
+    c.lista = true
+  })()
+  return c.promesa
+}
+
+export function Secuencia({ nombre, avance, className = '' }: { nombre: string; avance: MotionValue<number>; className?: string }) {
+  const ref = useRef<HTMLCanvasElement>(null)
+  const reducido = useReducedMotion()
+  useEffect(() => {
+    let vivo = true
+    let rf = 0
+    let visible = false
+    let actual = -1
+    let suave = 0
+    const cv = ref.current!
+    const ctx = cv.getContext('2d')!
+    const medir = () => {
+      const d = Math.min(devicePixelRatio || 1, 1.5)
+      cv.width = Math.round(cv.clientWidth * d)
+      cv.height = Math.round(cv.clientHeight * d)
+      actual = -1
+    }
+    const ob = new IntersectionObserver(([e]) => {
+      visible = e.isIntersecting
+      if (visible) cargarSecuencia(nombre)
+    }, { rootMargin: '60% 0px' })
+    ob.observe(cv)
+    const ciclo = () => {
+      if (!vivo) return
+      const c = memoria[nombre]
+      if (visible && c?.fotos.length) {
+        const meta = (reducido ? 0 : avance.get()) * (c.fotos.length - 1)
+        suave += (meta - suave) * 0.18
+        if (Math.abs(meta - suave) < 0.02) suave = meta
+        let i = Math.round(suave)
+        while (i > 0 && !(c.fotos[i]?.complete && c.fotos[i]?.naturalWidth)) i -= 1
+        const m = c.fotos[i]
+        if (i !== actual && m?.complete && m.naturalWidth) {
+          const s = Math.max(cv.width / m.naturalWidth, cv.height / m.naturalHeight)
+          const w = m.naturalWidth * s
+          const h = m.naturalHeight * s
+          ctx.drawImage(m, (cv.width - w) / 2, (cv.height - h) / 2, w, h)
+          actual = i
+        }
+      }
+      rf = requestAnimationFrame(ciclo)
+    }
+    medir()
+    addEventListener('resize', medir)
+    rf = requestAnimationFrame(ciclo)
+    return () => { vivo = false; cancelAnimationFrame(rf); ob.disconnect(); removeEventListener('resize', medir) }
+  }, [nombre, reducido])
+  return <canvas ref={ref} aria-hidden="true" className={className} />
+}
+
+export function Acordeon({ items }: { items: string[][] }) {
+  const [abierta, setAbierta] = useState<number | null>(0)
+  return (
+    <div>
+      {items.map(([p, r], i) => {
+        const abierto = abierta === i
+        return (
+          <div key={p} className="acor">
+            <button type="button" aria-expanded={abierto} onClick={() => setAbierta(abierto ? null : i)}>
+              <span>{p}</span>
+              <motion.b animate={{ rotate: abierto ? 45 : 0 }} aria-hidden="true">+</motion.b>
+            </button>
+            <motion.div initial={false} animate={{ height: abierto ? 'auto' : 0 }} transition={{ duration: 0.5, ease: EASE }} style={{ overflow: 'hidden' }}>
+              <p>{r}</p>
+            </motion.div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+<<< FIN ARCHIVO
+
+>>> ARCHIVO: src/Mapa.tsx
+import { useMotionValueEvent, useScroll, useTransform } from 'motion/react'
+import { useEffect, useRef, useState } from 'react'
+import { marca, ubicacion } from './contenido'
+
+type Punto = [number, number]
+
+const metros = (a: Punto, b: Punto) => {
+  const r = Math.PI / 180
+  const dLat = (b[1] - a[1]) * r
+  const dLng = (b[0] - a[0]) * r
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos(a[1] * r) * Math.cos(b[1] * r) * Math.sin(dLng / 2) ** 2
+  return 12742000 * Math.asin(Math.sqrt(s))
+}
+const linea = (c: Punto[]) => ({ type: 'Feature' as const, properties: {}, geometry: { type: 'LineString' as const, coordinates: c } })
+
+async function pedirRuta(): Promise<{ c: Punto[]; km: number; min: number }> {
+  const { origen: o, destino: d } = ubicacion
+  try {
+    const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${o.lng},${o.lat};${d.lng},${d.lat}?overview=full&geometries=geojson`, { signal: AbortSignal.timeout(9000) })
+    const j = await r.json()
+    const x = j.routes[0]
+    return { c: x.geometry.coordinates, km: Math.round(x.distance / 100) / 10, min: Math.max(1, Math.round(x.duration / 60)) }
+  } catch {
+    return { c: [[o.lng, o.lat], [d.lng, d.lat]], km: 0, min: 0 }
+  }
+}
+
+function tenir(map: any) {
+  for (const capa of map.getStyle().layers) {
+    const id = capa.id
+    const ocultar = () => map.setLayoutProperty(id, 'visibility', 'none')
+    try {
+      if (capa.type === 'background') map.setPaintProperty(id, 'background-color', '#0B1416')
+      else if (capa.type === 'raster') ocultar()
+      else if (capa.type === 'fill-extrusion') { map.setPaintProperty(id, 'fill-extrusion-color', '#12383B'); map.setPaintProperty(id, 'fill-extrusion-opacity', 0.95) }
+      else if (capa.type === 'fill') {
+        if (id === 'road_area_pattern' || id === 'building') ocultar()
+        else map.setPaintProperty(id, 'fill-color', id === 'water' ? '#0F2E38' : '#0E1B1E')
+      } else if (capa.type === 'line') {
+        if (/casing|rail|boundary|tunnel|outline/.test(id)) ocultar()
+        else map.setPaintProperty(id, 'line-color', /waterway/.test(id) ? '#0F2E38' : '#27484C')
+      } else if (capa.type === 'symbol') {
+        if (/^highway-name|^label_(city|town|village|other)/.test(id)) { map.setPaintProperty(id, 'text-color', '#8FA5A3'); map.setPaintProperty(id, 'text-halo-color', '#0B1416') }
+        else ocultar()
+      }
+    } catch { /* Una capa distinta no debe detener el mapa. */ }
+  }
+}
+
+function marcaDiente() {
+  const el = document.createElement('div')
+  el.innerHTML = '<svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><circle cx="23" cy="23" r="22" fill="#57BFAE" stroke="#0B1416" stroke-width="2"/><path transform="translate(9 9) scale(1.17)" d="M12 3C9 1 3 1 2 7c-.6 4 1.500 6 2 9 .4 2.500 1 5 2.500 5 2 0 1.500-6 5.500-6s3.500 6 5.500 6c1.500 0 2.100-2.500 2.500-5 .5-3 2.600-5 2-9-1-6-7-6-10-4Z" fill="#0B1416"/></svg>'
+  return el
+}
+
+const chip = (t: string, c: string) => {
+  const el = document.createElement('div')
+  el.className = c
+  el.textContent = t
+  return el
+}
+
+export default function Mapa() {
+  const zona = useRef<HTMLElement>(null)
+  const caja = useRef<HTMLDivElement>(null)
+  const obj = useRef(0)
+  const [fallo, setFallo] = useState(false)
+  const [info, setInfo] = useState({ km: 0, min: 0 })
+  const { scrollYProgress: p } = useScroll({ target: zona, offset: ['start start', 'end end'] })
+  const av = useTransform(p, [0.06, 0.86], [0, 1], { clamp: true })
+  useMotionValueEvent(av, 'change', (v) => { obj.current = v })
+
+  useEffect(() => {
+    let vivo = true
+    let rf = 0
+    let map: any
+    const ob = new IntersectionObserver(async (es) => {
+      if (!es[0].isIntersecting || map) return
+      ob.disconnect()
+      try {
+        const [ml, tr, ruta] = await Promise.all([
+          import('maplibre-gl'),
+          import('maplibre-gl/dist/maplibre-gl-worker.mjs?url' as string),
+          pedirRuta(),
+          import('maplibre-gl/dist/maplibre-gl.css'),
+        ]) as any
+        if (!vivo) return
+        ml.setWorkerUrl(tr.default)
+        setInfo({ km: ruta.km, min: ruta.min })
+        const coords: Punto[] = ruta.c
+        const acum = coords.reduce<number[]>((l, c, i) => [...l, i ? l[i - 1] + metros(coords[i - 1], c) : 0], [])
+        const largo = acum[acum.length - 1]
+        const tramo = (q: number) => {
+          const d = q * largo
+          let i = 0
+          while (i < acum.length - 2 && acum[i + 1] < d) i += 1
+          const a = coords[i], b = coords[i + 1]
+          const t = (d - acum[i]) / Math.max(1, acum[i + 1] - acum[i])
+          const pt: Punto = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]
+          return { pt, hecha: [...coords.slice(0, i + 1), pt] }
+        }
+        const m = new ml.Map({ container: caja.current!, style: 'https://tiles.openfreemap.org/styles/liberty', interactive: false, center: coords[0], zoom: 14, pitch: 58, attributionControl: { compact: true } })
+        map = m
+        m.on('error', (e: any) => { if (!m.isStyleLoaded() && String(e.error?.message).includes('style')) setFallo(true) })
+        m.once('load', () => {
+          if (!vivo) return
+          tenir(m)
+          caja.current!.style.opacity = '1'
+          const b = new ml.LngLatBounds(coords[0], coords[0])
+          coords.forEach((c) => b.extend(c))
+          const movil = innerWidth < 768
+          const cam = m.cameraForBounds(b, { padding: movil ? { top: 170, bottom: 250, left: 50, right: 50 } : { top: 150, bottom: 140, left: 520, right: 120 }, pitch: 58, bearing: 24 })
+          const centro = ml.LngLat.convert(cam?.center ?? coords[0])
+          const z0 = cam?.zoom ?? 14
+          m.addSource('todo', { type: 'geojson', data: linea(coords) })
+          m.addSource('hecha', { type: 'geojson', data: linea(coords.slice(0, 2)) })
+          const lay = { 'line-cap': 'round', 'line-join': 'round' }
+          m.addLayer({ id: 'todo', type: 'line', source: 'todo', layout: lay, paint: { 'line-color': '#F4EFE6', 'line-opacity': 0.2, 'line-width': 3, 'line-dasharray': [1, 2] } })
+          m.addLayer({ id: 'halo', type: 'line', source: 'hecha', layout: lay, paint: { 'line-color': '#57BFAE', 'line-opacity': 0.35, 'line-width': 18, 'line-blur': 9 } })
+          m.addLayer({ id: 'hecha', type: 'line', source: 'hecha', layout: lay, paint: { 'line-color': '#57BFAE', 'line-width': 5 } })
+          new ml.Marker({ element: chip(ubicacion.origen.nombre, 'map-chip'), anchor: 'bottom', offset: [0, -26] }).setLngLat(coords[0]).addTo(m)
+          new ml.Marker({ element: chip(ubicacion.destino.nombre, 'map-chip fin'), anchor: 'bottom', offset: [0, -30] }).setLngLat(coords[coords.length - 1]).addTo(m)
+          const dn = new ml.Marker({ element: marcaDiente() }).setLngLat(coords[0]).addTo(m)
+          let q = 0, ult = -1
+          const ciclo = () => {
+            if (!vivo) return
+            q += (obj.current - q) * 0.12
+            if (Math.abs(q - ult) > 0.0004) {
+              ult = q
+              const t = tramo(Math.min(0.9999, Math.max(0.0001, q)))
+              dn.setLngLat(t.pt)
+              m.getSource('hecha').setData(linea(t.hecha))
+              m.jumpTo({ center: [centro.lng + (t.pt[0] - centro.lng) * 0.3 * q, centro.lat + (t.pt[1] - centro.lat) * 0.3 * q], zoom: z0 + 0.35 * q, bearing: 24 - 46 * q, pitch: 58 })
+            }
+            rf = requestAnimationFrame(ciclo)
+          }
+          rf = requestAnimationFrame(ciclo)
+        })
+      } catch { setFallo(true) }
+    }, { rootMargin: '100% 0px' })
+    ob.observe(zona.current!)
+    return () => { vivo = false; ob.disconnect(); cancelAnimationFrame(rf); map?.remove() }
+  }, [])
+
+  const { destino: d } = ubicacion
+  return (
+    <section ref={zona} className="mapa" id="ubicacion">
+      <div className="fijo">
+        {!fallo && <div className="lleno"><div ref={caja} style={{ width: '100%', height: '100%', opacity: 0, transition: 'opacity .8s' }} /></div>}
+        <div className="lleno mapa-v" />
+        <div className="mapa-t">
+          <h2>El camino es más corto de lo que crees.</h2>
+          <p className="lead">{marca.direccion}</p>
+          {marca.horario.map((h) => <p key={h}>{h}</p>)}
+          {info.min > 0 && <p className="nota">{info.km} km, unos {info.min} minutos desde {ubicacion.origen.nombre.toLowerCase()}</p>}
+          <a className="btn claro" href={`https://www.google.com/maps/dir/?api=1&destination=${d.lat},${d.lng}`} target="_blank" rel="noreferrer">Abrir en Google Maps</a>
+        </div>
+      </div>
+    </section>
+  )
+}
+<<< FIN ARCHIVO
+
+>>> ARCHIVO: src/Inicio.tsx
+import { AnimatePresence, motion, useMotionTemplate, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type MotionValue } from 'motion/react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { agenda, capitulos, cita, doctora, marca, preguntas, sintomas, testimonios, tratamientos, ubicacion } from './contenido'
+import { Acordeon, cargarSecuencia, EASE, Foto, Punto, Secuencia, Titulo, useExisten, Video, wa } from './lib'
+import Mapa from './Mapa'
+
+type Ir = (h: string, e: { clientX: number; clientY: number }) => void
+const trat = (s: string) => tratamientos.find((t) => t.slug === s)!
+
+function Carga() {
+  const [a, setA] = useState(0)
+  const [fuera, setFuera] = useState(false)
+  useEffect(() => {
+    const limite = setTimeout(() => setFuera(true), 9000)
+    cargarSecuencia('hook', (v) => setA(v)).then(() => setFuera(true))
+    return () => clearTimeout(limite)
+  }, [])
+  const c = 2 * Math.PI * 46
+  return (
+    <AnimatePresence>
+      {!fuera && (
+        <motion.div className="carga" exit={{ clipPath: 'circle(0% at 50% 50%)' }} transition={{ duration: 0.9, ease: EASE }} style={{ clipPath: 'circle(120% at 50% 50%)' }}>
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="46" fill="none" stroke="#12383B" strokeWidth="1.5" />
+            <circle cx="50" cy="50" r="46" fill="none" stroke="#57BFAE" strokeWidth="1.5" strokeDasharray={c} strokeDashoffset={c * (1 - a)} transform="rotate(-90 50 50)" />
+          </svg>
+          <p>Preparando tu consulta</p>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
+function Capitulo({ avance, c }: { avance: MotionValue<number>; c: (typeof capitulos)[number] }) {
+  const opacity = useTransform(avance, [c.desde, c.desde + 0.03, c.hasta - 0.03, c.hasta], [0, 1, 1, 0])
+  const y = useTransform(avance, [c.desde, c.desde + 0.05, c.hasta], [50, 0, -30])
+  return (
+    <motion.div className={`capi ${c.lado}`} style={{ opacity, y }}>
+      <h2>{c.titulo}</h2>
+      <p>{c.texto}</p>
+    </motion.div>
+  )
+}
+
+function Hook() {
+  const zona = useRef<HTMLElement>(null)
+  const { scrollYProgress: p } = useScroll({ target: zona, offset: ['start start', 'end end'] })
+  const arriba = useTransform(p, [0, 0.16], ['0vh', '-62vh'])
+  const abajo = useTransform(p, [0, 0.16], ['0vh', '62vh'])
+  const pie = useTransform(p, [0, 0.07], [1, 0])
+  const velo = useTransform(p, [0.86, 0.97], [0, 1])
+  const cierre = useTransform(p, [0.9, 0.97], [0, 1])
+  const n = marca.palabra.length
+  return (
+    <section ref={zona} className="hook" aria-label="Presentación">
+      <div className="fijo">
+        <Secuencia nombre="hook" avance={p} className="lleno" />
+        <div className="lleno hook-velo" />
+        <h1 className="palabra" aria-label={marca.palabra} style={{ fontSize: `min(${Math.min(150 / n, 26)}vw, 42vh, 340px)` }}>
+          <motion.span aria-hidden="true" className="pal-a" style={{ y: arriba }}>{marca.palabra}</motion.span>
+          <motion.span aria-hidden="true" className="pal-b" style={{ y: abajo }}>{marca.palabra}</motion.span>
+        </h1>
+        <motion.div className="hook-arr" style={{ opacity: pie }}>
+          <p>{marca.pregunta}</p>
+        </motion.div>
+        <motion.div className="hook-pie" style={{ opacity: pie }}>
+          <span className="franja">{marca.franja}</span>
+          <p>{marca.frase}</p>
+          <a className="btn menta" href={wa('Hola, quiero agendar una revisión.')} target="_blank" rel="noreferrer">Agendar revisión</a>
+        </motion.div>
+        {capitulos.map((c) => <Capitulo key={c.titulo} avance={p} c={c} />)}
+        <motion.div className="lleno negro" style={{ opacity: velo }} />
+        <motion.p className="hook-fin" style={{ opacity: cierre }}>¿Y tú qué ves?</motion.p>
+      </div>
+    </section>
+  )
+}
+
+function Sintomas({ ir }: { ir: Ir }) {
+  const zona = useRef<HTMLElement>(null)
+  const [est, setEst] = useState({ a: 0, b: 0 })
+  const { scrollYProgress: p } = useScroll({ target: zona, offset: ['start start', 'end end'] })
+  const cambiar = (i: number) => setEst((e) => (e.a === i ? e : { a: i, b: e.a }))
+  useMotionValueEvent(p, 'change', (v) => cambiar(Math.min(sintomas.length - 1, Math.floor(v * sintomas.length))))
+  const elegir = (i: number) => {
+    const z = zona.current!
+    const t = z.offsetHeight - innerHeight
+    if (t > 40) scrollTo({ top: z.offsetTop + t * ((i + 0.5) / sintomas.length), behavior: 'smooth' })
+    else cambiar(i)
+  }
+  const activo = trat(sintomas[est.a].trat)
+  return (
+    <section ref={zona} className="sint" id="espejo">
+      <div className="fijo">
+        {sintomas.map((s, i) => (
+          <div key={s.trat} className="sint-foto" data-e={i === est.a ? 'on' : i === est.b ? 'pre' : ''}>
+            <Foto n={`esp-${s.trat}`} alt="" className="lleno cubre" />
+          </div>
+        ))}
+        <div className="lleno sint-velo" />
+        <Punto />
+        <div className="sint-cab"><h2>¿Qué ves en el espejo?</h2></div>
+        <div className="sint-lista">
+          {sintomas.map((s, i) => (
+            <button key={s.trat} type="button" className={i === est.a ? 'on' : ''} aria-pressed={i === est.a} onClick={() => elegir(i)}>{s.frase}</button>
+          ))}
+        </div>
+        <AnimatePresence mode="wait">
+          <motion.div key={activo.slug} className="sint-res" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+            <span className="franja">{activo.nombre}</span>
+            <p>{activo.frase}</p>
+            <button type="button" className="enlace" onClick={(e) => ir(`#/tratamiento/${activo.slug}`, e)}>Ver cómo se resuelve</button>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </section>
+  )
+}
+
+const TAMS = ['g', 'p', 'm', 'g', 'p', 'm', 'g', 'p']
+
+function Carril({ ir }: { ir: Ir }) {
+  const zona = useRef<HTMLElement>(null)
+  const pista = useRef<HTMLDivElement>(null)
+  const [dist, setDist] = useState(0)
+  const { scrollYProgress: p } = useScroll({ target: zona, offset: ['start start', 'end end'] })
+  useLayoutEffect(() => {
+    const medir = () => setDist(innerHeight < 500 ? 0 : Math.max(0, pista.current!.scrollWidth - innerWidth))
+    medir()
+    addEventListener('resize', medir)
+    return () => removeEventListener('resize', medir)
+  }, [])
+  const x = useTransform(p, [0, 1], [0, -dist])
+  return (
+    <section ref={zona} className="carril" id="especialidades" data-claro>
+      <div className="fijo">
+        <motion.div ref={pista} className="pista" style={{ x }}>
+          <div className="carr-cab">
+            <h2>Todo lo que tu boca puede necesitar, en un solo lugar.</h2>
+            <p>Ocho especialidades con el mismo criterio: primero entender, después tratar.</p>
+          </div>
+          {tratamientos.map((t, i) => (
+            <button key={t.slug} type="button" data-ver className={`pieza ${TAMS[i]} ${i % 2 ? 'baja' : 'alta'}`} onClick={(e) => ir(`#/tratamiento/${t.slug}`, e)}>
+              <span className="pieza-m"><Video n={`esp-${t.slug}`} className="lleno cubre" /></span>
+              <strong>{t.nombre}</strong>
+              <span className="pieza-f">{t.frase}</span>
+            </button>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
+function Transformacion() {
+  const zona = useRef<HTMLElement>(null)
+  const reducido = useReducedMotion()
+  const { scrollYProgress: p } = useScroll({ target: zona, offset: ['start start', 'end end'] })
+  const radio = useTransform(p, [0, 0.28], [22, 150])
+  const clipIni = useMotionTemplate`circle(${radio}vmin at 50% 50%)`
+  const aro = useTransform(p, [0.14, 0.26], [1, 0])
+  const esc = useTransform(p, [0, 0.28], [1, 7])
+  const avance = useTransform(p, [0.28, 0.92], [0, 1], { clamp: true })
+  const a = useTransform(p, [0.04, 0.1, 0.42, 0.5], [0, 1, 1, 0])
+  const b = useTransform(p, [0.56, 0.64, 0.9, 1], [0, 1, 1, 1])
+  return (
+    <section ref={zona} className="trans" aria-label="Antes y después">
+      <div className="fijo">
+        <motion.div className="lleno" style={reducido ? undefined : { clipPath: clipIni }}>
+          <Secuencia nombre="transformacion" avance={avance} className="lleno" />
+          <div className="lleno trans-velo" />
+        </motion.div>
+        <motion.div className="aro" style={{ opacity: aro, scale: esc }} aria-hidden="true" />
+        <motion.div className="trans-t izq" style={{ opacity: a }}><h2>Así llegó.</h2><p>Sarro, una caries y años sin revisión.</p></motion.div>
+        <motion.div className="trans-t der" style={{ opacity: b }}><h2>Así se fue.</h2><p>El mismo diente, con su forma de siempre.</p></motion.div>
+      </div>
+    </section>
+  )
+}
+
+function Comparador() {
+  const caja = useRef<HTMLDivElement>(null)
+  const mover = (v: string) => caja.current!.style.setProperty('--x', `${v}%`)
+  return (
+    <section className="comp" data-claro>
+      <div className="comp-cab">
+        <Titulo texto="Compáralo tú mismo." />
+        <p className="lead">Arrastra la línea. Cada caso real se publica con autorización del paciente.</p>
+      </div>
+      <div className="comp-caja" ref={caja}>
+        <Foto n="despues" alt="Después del tratamiento" className="lleno cubre" />
+        <div className="comp-a"><Foto n="antes" alt="Antes del tratamiento" className="lleno cubre" /></div>
+        <div className="comp-l"><b /></div>
+        <span className="comp-e i">Antes</span><span className="comp-e d">Después</span>
+        <input type="range" min="0" max="100" defaultValue="50" aria-label="Comparar antes y después" onInput={(e) => mover((e.target as HTMLInputElement).value)} />
+      </div>
+    </section>
+  )
+}
+
+function Cita() {
+  const [a, setA] = useState(0)
+  const refs = useRef<(HTMLElement | null)[]>([])
+  useEffect(() => {
+    const ob = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) setA(refs.current.indexOf(e.target as HTMLElement)) }), { rootMargin: '-45% 0px -45% 0px' })
+    refs.current.forEach((r) => r && ob.observe(r))
+    return () => ob.disconnect()
+  }, [])
+  return (
+    <section className="cita" data-claro>
+      <Titulo texto="Tu primera cita no empieza en el sillón." className="cita-t" />
+      <div className="cita-g">
+        <div className="cita-fija">
+          {cita.map((c, i) => <div key={c.titulo} className="cita-f" data-on={i === a}><Foto n={`cita-${i + 1}`} alt="" className="lleno cubre" /></div>)}
+        </div>
+        <div>
+          {cita.map((c, i) => (
+            <article key={c.titulo} ref={(r) => { refs.current[i] = r }}>
+              <div className="cita-m"><Foto n={`cita-${i + 1}`} alt="" className="lleno cubre" /></div>
+              <h3>{c.titulo}</h3>
+              <p className="lead">{c.texto}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function Doctora() {
+  const zona = useRef<HTMLElement>(null)
+  const { scrollYProgress: p } = useScroll({ target: zona, offset: ['start end', 'end start'] })
+  const y = useTransform(p, [0, 1], ['-8%', '8%'])
+  return (
+    <section ref={zona} className="doc" id="doctora">
+      <div className="doc-m"><motion.div className="doc-in" style={{ y }}><Foto n="doctora" alt={marca.doctora} className="lleno cubre" /></motion.div></div>
+      <div className="doc-t">
+        <span className="franja">{marca.especialidad}</span>
+        <Titulo texto={marca.doctora} />
+        <p className="lead">{doctora.bio}</p>
+        <ul>{doctora.credenciales.map((c) => <li key={c}>{c}</li>)}</ul>
+      </div>
+    </section>
+  )
+}
+
+function Galeria() {
+  const ok = useExisten(['galeria-1', 'galeria-2', 'galeria-3', 'galeria-4'])
+  if (!ok.length) return null
+  return (
+    <section className="gal" aria-label="El consultorio">
+      <Titulo texto="Un lugar donde se puede respirar." className="gal-t" />
+      <div className="gal-g">
+        {ok.map((n, i) => (
+          <motion.div key={n} className={`gal-c c${i}`} initial={{ clipPath: 'inset(100% 0 0 0)' }} whileInView={{ clipPath: 'inset(0% 0 0 0)' }} viewport={{ once: true, margin: '-6% 0px' }} transition={{ duration: 1.1, delay: i * 0.1, ease: EASE }}>
+            <Foto n={n} alt="" className="lleno cubre" />
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function Testimonios() {
+  if (!testimonios.length) return null
+  return (
+    <section className="test">
+      {testimonios.map((t) => <figure key={t.autor}><blockquote>{t.texto}</blockquote><figcaption>{t.autor}</figcaption></figure>)}
+    </section>
+  )
+}
+
+function Chips({ titulo, valores, valor, cambiar }: { titulo: string; valores: string[]; valor: string; cambiar: (v: string) => void }) {
+  return (
+    <fieldset>
+      <legend>{titulo}</legend>
+      <div className="chips">
+        {valores.map((v) => <button key={v} type="button" aria-pressed={v === valor} className={v === valor ? 'on' : ''} onClick={() => cambiar(v)}>{v}</button>)}
+      </div>
+    </fieldset>
+  )
+}
+
+function Agenda() {
+  const [motivo, setMotivo] = useState(tratamientos[5].nombre)
+  const [dia, setDia] = useState(agenda.dias[1])
+  const [hora, setHora] = useState(agenda.horas[0])
+  return (
+    <section className="age" id="agendar">
+      <Foto n="galeria-1" alt="" className="lleno cubre age-f" />
+      <div className="lleno age-v" />
+      <div className="age-in">
+        <div>
+          <Titulo texto="Hoy puede ser el día que dejes de posponerlo." />
+          <a className="btn coral" href={wa('Hola, me duele ahora y necesito atención lo antes posible.')} target="_blank" rel="noreferrer">Me duele ahora</a>
+        </div>
+        <div className="age-f2">
+          <Chips titulo="Qué necesitas" valores={tratamientos.map((t) => t.nombre)} valor={motivo} cambiar={setMotivo} />
+          <Chips titulo="Día" valores={agenda.dias} valor={dia} cambiar={setDia} />
+          <Chips titulo="Horario" valores={agenda.horas} valor={hora} cambiar={setHora} />
+          <a className="btn menta" href={wa(`Hola, quiero una cita para ${motivo}, el ${dia}, por la ${hora.toLowerCase()}.`)} target="_blank" rel="noreferrer">Quiero una cita</a>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export default function Inicio({ ir }: { ir: Ir }) {
+  return (
+    <main>
+      <Carga />
+      <Hook />
+      <Sintomas ir={ir} />
+      <Carril ir={ir} />
+      <Transformacion />
+      <Comparador />
+      <Cita />
+      <Doctora />
+      <Galeria />
+      <Testimonios />
+      {ubicacion.activo && <Mapa />}
+      <Agenda />
+      <section className="dud" data-claro>
+        <Titulo texto="Lo que nadie se anima a preguntar." />
+        <Acordeon items={preguntas} />
+      </section>
+    </main>
+  )
+}
+<<< FIN ARCHIVO
+
+>>> ARCHIVO: src/Tratamiento.tsx
+import { motion } from 'motion/react'
+import { tratamientos } from './contenido'
+import { Acordeon, EASE, Foto, Punto, Titulo, Video, wa } from './lib'
+
+type Ir = (h: string, e: { clientX: number; clientY: number }) => void
+
+export default function Tratamiento({ t, ir }: { t: (typeof tratamientos)[number]; ir: Ir }) {
+  const i = tratamientos.findIndex((x) => x.slug === t.slug)
+  const sig = tratamientos[(i + 1) % tratamientos.length]
+  return (
+    <main key={t.slug}>
+      <section className="tr-h">
+        <Video n={`esp-${t.slug}`} className="lleno cubre" />
+        <div className="lleno tr-v" />
+        <Punto alto="18vh" />
+        <div className="tr-ht">
+          <button type="button" className="enlace" onClick={(e) => ir('#/', e)}>Todas las especialidades</button>
+          <motion.h1 initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.9, ease: EASE, delay: 0.1 }}>{t.nombre}</motion.h1>
+          <p className="lead">{t.frase}</p>
+        </div>
+      </section>
+      <section className="tr-a" data-claro>
+        <div>
+          <Titulo texto="Qué resuelve" />
+          <p className="lead">{t.resuelve}</p>
+          <a className="btn oscuro" href={wa(`Hola, quiero información sobre ${t.nombre}.`)} target="_blank" rel="noreferrer">Preguntar por {t.nombre.toLowerCase()}</a>
+        </div>
+        <div className="tr-img"><Foto n={`esp-${t.slug}`} alt="" className="lleno cubre" /></div>
+      </section>
+      <section className="tr-b">
+        <Titulo texto="Te conviene si" />
+        <ul>{t.indicado.map((x) => <li key={x}>{x}</li>)}</ul>
+      </section>
+      <section className="tr-c" data-claro>
+        <Titulo texto="Cómo es el proceso" />
+        <div className="tr-p">
+          {t.proceso.map(([a, b]) => (
+            <motion.article key={a} initial={{ y: 30 }} whileInView={{ y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, ease: EASE }}>
+              <h3>{a}</h3>
+              <p>{b}</p>
+            </motion.article>
+          ))}
+        </div>
+        <p className="nota">La doctora confirma tu plan después de evaluarte.</p>
+      </section>
+      <section className="dud" data-claro>
+        <Titulo texto="Preguntas frecuentes" />
+        <Acordeon items={t.preguntas} />
+      </section>
+      <button type="button" data-ver className="tr-s" onClick={(e) => ir(`#/tratamiento/${sig.slug}`, e)}>
+        <Foto n={`esp-${sig.slug}`} alt="" className="lleno cubre" />
+        <span className="lleno tr-v" />
+        <span className="tr-st"><span className="lead">Siguiente</span><strong>{sig.nombre}</strong></span>
+      </button>
+    </main>
+  )
+}
+<<< FIN ARCHIVO
+
+>>> ARCHIVO: src/App.tsx
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { useEffect, useRef, useState } from 'react'
+import { marca, tratamientos } from './contenido'
+import { EASE, wa } from './lib'
+import Inicio from './Inicio'
+import Tratamiento from './Tratamiento'
+
+const ENLACES = [['espejo', '¿Qué ves?'], ['especialidades', 'Especialidades'], ['doctora', 'La doctora'], ['ubicacion', 'Ubicación'], ['agendar', 'Agendar']]
+
+function Lente() {
+  const n = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!matchMedia('(hover:hover) and (pointer:fine)').matches || matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    let x = 0, y = 0, a = 0, b = 0, r = 0
+    const m = (e: MouseEvent) => {
+      x = e.clientX
+      y = e.clientY
+      const el = n.current!
+      const t = e.target as Element
+      el.style.opacity = '1'
+      el.dataset.g = t.closest('a,button,input') ? '1' : ''
+      el.dataset.v = t.closest('[data-ver]') ? '1' : ''
+    }
+    const c = () => {
+      a += (x - a) * 0.17
+      b += (y - b) * 0.17
+      if (n.current) n.current.style.transform = `translate3d(${a}px,${b}px,0)`
+      r = requestAnimationFrame(c)
+    }
+    addEventListener('mousemove', m)
+    c()
+    return () => { removeEventListener('mousemove', m); cancelAnimationFrame(r) }
+  }, [])
+  return <div className="lente" ref={n} aria-hidden="true"><i /><span>Ver</span></div>
+}
+
+function Pie({ ir }: { ir: (id: string) => void }) {
+  return (
+    <footer className="pie">
+      <p className="pie-g">{marca.pregunta}</p>
+      <button type="button" className="btn menta" onClick={() => ir('agendar')}>Agendar revisión</button>
+      <div className="pie-d">
+        <div><strong>{marca.nombre}</strong><p>{marca.direccion}</p></div>
+        <div>{marca.horario.map((h) => <p key={h}>{h}</p>)}</div>
+        <div>{tratamientos.slice(0, 4).map((t) => <a key={t.slug} href={`#/tratamiento/${t.slug}`}>{t.nombre}</a>)}</div>
+        <div>{tratamientos.slice(4).map((t) => <a key={t.slug} href={`#/tratamiento/${t.slug}`}>{t.nombre}</a>)}</div>
+      </div>
+      <p className="nota">{marca.aviso} La información de este sitio es general y no reemplaza una evaluación profesional.</p>
+    </footer>
+  )
+}
+
+export default function App() {
+  const [hash, setHash] = useState(location.hash)
+  const [menu, setMenu] = useState(false)
+  const [claro, setClaro] = useState(false)
+  const iris = useRef<HTMLDivElement>(null)
+  const reducido = useReducedMotion()
+
+  useEffect(() => {
+    const f = () => { setHash(location.hash); scrollTo(0, 0) }
+    addEventListener('hashchange', f)
+    return () => removeEventListener('hashchange', f)
+  }, [])
+
+  useEffect(() => {
+    let r = 0
+    const medir = () => {
+      r = 0
+      setClaro(Array.from(document.querySelectorAll('[data-claro]')).some((e) => {
+        const q = e.getBoundingClientRect()
+        return q.top < 40 && q.bottom > 40
+      }))
+    }
+    const on = () => { if (!r) r = requestAnimationFrame(medir) }
+    addEventListener('scroll', on, { passive: true })
+    medir()
+    return () => removeEventListener('scroll', on)
+  }, [hash])
+
+  const ir = (h: string, e: { clientX: number; clientY: number }) => {
+    const fin = () => {
+      location.hash = h
+      if (h === '#/') setTimeout(() => document.getElementById('especialidades')?.scrollIntoView(), 140)
+    }
+    const n = iris.current
+    if (reducido || !n) return fin()
+    n.style.left = `${e.clientX}px`
+    n.style.top = `${e.clientY}px`
+    n.classList.add('on')
+    setTimeout(fin, 520)
+    setTimeout(() => n.classList.remove('on'), 640)
+  }
+
+  const a = (id: string) => {
+    setMenu(false)
+    if (hash.startsWith('#/tratamiento/')) {
+      location.hash = '#/'
+      setTimeout(() => document.getElementById(id)?.scrollIntoView(), 180)
+    } else document.getElementById(id)?.scrollIntoView({ behavior: reducido ? 'auto' : 'smooth' })
+  }
+
+  const t = tratamientos.find((x) => hash === `#/tratamiento/${x.slug}`)
+  return (
+    <>
+      <header className={`cab ${claro && !menu ? 'claro' : ''}`}>
+        <a href="#/" className="marca" onClick={() => { setMenu(false); scrollTo(0, 0) }}>{marca.nombre}</a>
+        <nav aria-label="Principal">{ENLACES.map(([id, l]) => <button key={id} type="button" onClick={() => a(id)}>{l}</button>)}</nav>
+        <button type="button" className="cab-m" aria-expanded={menu} onClick={() => setMenu(!menu)}>{menu ? 'Cerrar' : 'Menú'}</button>
+      </header>
+      <AnimatePresence>
+        {menu && (
+          <motion.div className="menu" initial={{ clipPath: 'circle(0% at 92% 40px)' }} animate={{ clipPath: 'circle(150% at 92% 40px)' }} exit={{ clipPath: 'circle(0% at 92% 40px)' }} transition={{ duration: 0.7, ease: EASE }}>
+            {ENLACES.map(([id, l]) => <button key={id} type="button" onClick={() => a(id)}>{l}</button>)}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {t ? <Tratamiento t={t} ir={ir} /> : <Inicio ir={ir} />}
+      <Pie ir={a} />
+      <a className="barra" href={wa('Hola, quiero agendar una revisión.')} target="_blank" rel="noreferrer">Agendar por WhatsApp</a>
+      <div className="iris" ref={iris} aria-hidden="true" />
+      <Lente />
+    </>
+  )
+}
+<<< FIN ARCHIVO
+
+FIN DEL PROMPT ESPEJO-T003 v1.0
